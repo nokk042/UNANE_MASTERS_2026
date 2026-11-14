@@ -1283,12 +1283,6 @@ function renderClub() {
   h += `<section class="sec sheetpaper"><h3>演出</h3>
     <div class="rowline"><span>効果音</span><button class="btn ink sm" data-act="sound">${snd ? 'オン' : 'オフ'}</button></div>
     <div class="rowline"><span>オープニング</span><button class="btn ink sm" data-act="replay">もう一度見る</button></div></section>`;
-  h += `<section class="sec sheetpaper"><h3>同期</h3>
-    <p>${Store.mode === 'local' ? '<b>デモモード</b>で動いています。スコアはこの端末のブラウザ内だけに保存され、ほかのスマホには届きません。'
-      : `<b>オンライン同期</b>（Supabase）で動いています。${Store.denied ? esc(Store.denied) + '。' : Store.online ? `接続中${Store.wsOk ? '（即時反映）' : '（3秒ごとに更新）'}。` : '再接続を試みています。'}`}</p>
-    <div class="field"><label>SUPABASE PROJECT URL</label><input class="inp" id="supa-url" placeholder="https://xxxx.supabase.co" value="${esc(supa ? supa.url : '')}"></div>
-    <div class="field"><label>公開用キー（anon / publishable）</label><input class="inp" id="supa-key" value="${esc(supa ? supa.key : '')}"></div>
-    <button class="btn ink sm" data-act="save-db">保存して再読み込み</button></section>`;
   h += `<section class="sec sheetpaper"><h3>幹事モード</h3><p>幹事室と進行ボタン（抽選・じゃんけん・表彰式）は、幹事モードの端末にだけ表示されます。ほかの端末を幹事にするには、URLの末尾に <b>#clubhouse</b> を付けて開くか、ホーム画面のロゴを5回タップします。</p>
     <button class="btn ink sm" data-act="host-off">この端末の幹事モードを解除</button></section>`;
   h += `<section class="sec sheetpaper"><h3>データ</h3><p>練習で入れたスコアは、本番前に消してください。</p>
@@ -1480,12 +1474,6 @@ document.addEventListener('click', async e => {
     }
     case 'sound': LS.set('unane.sound', !LS.get('unane.sound', true)); if (LS.get('unane.sound', true)) { Snd.unlock(); Snd.ok(); } renderClub(); break;
     case 'replay': openingShow(true); break;
-    case 'save-db': {
-      const u = ($('#supa-url').value || '').trim(), k = ($('#supa-key').value || '').trim();
-      if (u && !/^https:\/\/.+/.test(u)) { toast('https:// で始まるURLを入れてください'); break; }
-      LS.set('unane.supa', { url: u, key: k }); LS.set('unane.pending', []);
-      location.reload(); break;
-    }
     case 'reset-scores': if (await ask('スコアだけ消す', '全員のスコア・じゃんけん結果・表彰式の状態を消します。参加者と組み合わせは残ります。', '消す')) { moves = {}; Store.update({ scores: null, seq: null, janken: null, ceremony: null }, false); toast('スコアを消しました'); } break;
     case 'reset-all': if (await ask('すべて初期化', '参加者・コース設定・組み合わせ・スコアをすべて初期値に戻します。', '初期化')) { moves = {}; E.team = null; LS.set('unane.team', null); Store.update({ scores: null, seq: null, janken: null, ceremony: null, teams: null, tnames: null, players: DEFAULT_PLAYERS(), config: DEFAULT_CONFIG() }, false); toast('初期化しました'); } break;
   }

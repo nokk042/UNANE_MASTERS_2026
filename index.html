@@ -1056,14 +1056,10 @@ function renderNet() {
 /* ============ ルーティング ============ */
 const VIEWS = { board: 'v-board', score: 'v-score', clubhouse: 'v-club' };
 let cur = 'board';
-// 幹事モード：幹事室のタブと進行ボタンは、幹事の端末にだけ出す
-let isHost = LS.get('unane.host', false);
-function applyHost() { $('#tabs a[data-tab=clubhouse]').hidden = !isHost; }
-function setHost(v) { isHost = v; LS.set('unane.host', v); applyHost(); toast(v ? 'この端末を幹事モードにしました' : '幹事モードを解除しました'); }
+// 全員が同じ画面・同じ操作（幹事室も全員が使える）
+const isHost = true;
 function route() {
   const h = (location.hash || '#board').slice(1);
-  if (h === 'clubhouse' && !isHost) setHost(true);
-  applyHost();
   cur = VIEWS[h] ? h : 'board';
   for (const k in VIEWS) $('#' + VIEWS[k]).hidden = k !== cur;
   $$('#tabs a').forEach(a => a.classList.toggle('on', a.dataset.tab === cur));
@@ -1283,8 +1279,6 @@ function renderClub() {
   h += `<section class="sec sheetpaper"><h3>演出</h3>
     <div class="rowline"><span>効果音</span><button class="btn ink sm" data-act="sound">${snd ? 'オン' : 'オフ'}</button></div>
     <div class="rowline"><span>オープニング</span><button class="btn ink sm" data-act="replay">もう一度見る</button></div></section>`;
-  h += `<section class="sec sheetpaper"><h3>幹事モード</h3><p>幹事室と進行ボタン（抽選・じゃんけん・表彰式）は、幹事モードの端末にだけ表示されます。ほかの端末を幹事にするには、URLの末尾に <b>#clubhouse</b> を付けて開くか、ホーム画面のロゴを5回タップします。</p>
-    <button class="btn ink sm" data-act="host-off">この端末の幹事モードを解除</button></section>`;
   h += `<section class="sec sheetpaper"><h3>データ</h3><p>練習で入れたスコアは、本番前に消してください。</p>
     <button class="btn ink sm" data-act="reset-scores">スコアだけ消す</button> <button class="btn ink sm" data-act="reset-all">すべて初期化</button></section>`;
   el.innerHTML = h;
@@ -1427,7 +1421,6 @@ document.addEventListener('click', async e => {
   switch (a) {
     case 'goto': location.hash = '#' + t.dataset.to; break;
     case 'card': showCard(id); break;
-    case 'host-off': setHost(false); location.hash = '#board'; break;
     case 'view': boardView = t.dataset.v; LS.set('unane.view', boardView); viewSwitch = true; renderBoard(); viewSwitch = false; break;
     case 'close-sheet': closeSheet(); break;
     case 'jk': if (await ask('じゃんけんの勝者', `${D.byId[id].name}さんの勝ちで確定しますか？`, '確定')) Store.update({ 'janken/winner': id }); break;
@@ -1546,12 +1539,6 @@ function initHero() {
   rareFn = rare;
   setTimeout(() => rare(), 5000);
   setInterval(() => { if (!document.hidden && cur === 'board' && Math.random() < .6) rare(); }, 6000);
-  // ロゴを5回タップで幹事モードを切り替え
-  let taps = 0, tapT;
-  $('.l-brand .emblem').addEventListener('click', () => {
-    clearTimeout(tapT); tapT = setTimeout(() => { taps = 0; }, 2500);
-    if (++taps >= 5) { taps = 0; setHost(!isHost); if (!isHost && cur === 'clubhouse') location.hash = '#board'; render(); }
-  });
   setTimeout(spawn, 2600);
   setInterval(spawn, 13000);
   // 傾き連動
